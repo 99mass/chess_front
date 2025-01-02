@@ -4,15 +4,8 @@ workflows:
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
-      android_signing:
-        - keystore_reference
       groups:
         - google_play
-      vars:
-        STORE_PASSWORD: ${{ secrets.CM_KEYSTORE_PASSWORD }}
-        KEY_PASSWORD: ${{ secrets.CM_KEY_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.CM_KEY_ALIAS }}
-        KEYSTORE_PATH: ${{ secrets.CM_KEYSTORE_PATH }}
     scripts:
       - name: Set up local properties
         script: |
@@ -20,10 +13,6 @@ workflows:
       - name: Build Android release
         script: |
           ./gradlew assembleRelease
-      - name: Sign Android release
-        script: |
-          android-signing sign
-          mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/app-release-signed.apk
     artifacts:
       - app/build/outputs/apk/release/**/*.apk
       - app/build/outputs/mapping/release/mapping.txt
