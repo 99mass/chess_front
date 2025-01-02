@@ -45,6 +45,24 @@ workflows:
             cp "$STOCKFISH_MANIFEST" "${STOCKFISH_MANIFEST}.backup"
             sed -i '' 's/package="com.stockfish"//g' "$STOCKFISH_MANIFEST"
           fi
+
+      - name: Update Android build configuration
+        script: |
+          GRADLE_FILE="android/app/build.gradle"
+          if [ -f "$GRADLE_FILE" ]; then
+            cp "$GRADLE_FILE" "${GRADLE_FILE}.backup"
+            sed -i '' 's/compileSdkVersion.*/compileSdkVersion 33/g' "$GRADLE_FILE"
+            sed -i '' 's/targetSdkVersion.*/targetSdkVersion 33/g' "$GRADLE_FILE"
+            echo "namespace 'com.example.chess_front'" >> "$GRADLE_FILE"
+          fi
+          
+          # Mettre à jour aussi le build.gradle de Stockfish
+          STOCKFISH_GRADLE="/Users/builder/.pub-cache/hosted/pub.dev/stockfish-1.5.0/android/build.gradle"
+          if [ -f "$STOCKFISH_GRADLE" ]; then
+            cp "$STOCKFISH_GRADLE" "${STOCKFISH_GRADLE}.backup"
+            sed -i '' 's/compileSdkVersion.*/compileSdkVersion 33/g' "$STOCKFISH_GRADLE"
+            sed -i '' 's/targetSdkVersion.*/targetSdkVersion 33/g' "$STOCKFISH_GRADLE"
+          fi
           
       - name: Build Android release
         script: |
