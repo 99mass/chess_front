@@ -1,85 +1,69 @@
 workflows:
   android-app:
-    name: Android App
+    name: chess_front
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
       groups:
         - google_play
       flutter: stable
-      java: 17.0.0
     scripts:
-      - name: Environment Setup
+      - name: Flutter build preparation
         script: |
-          # Afficher les versions
-          java -version
-          flutter --version
-          echo "JAVA_HOME=$JAVA_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          
-      - name: Flutter Dependencies
-        script: |
-          # Installation des dépendances
+          # Installer les dépendances Flutter
           flutter pub get
           
-          # Vérification de Flutter
-          flutter doctor -v
+          # Vérifier que le dossier android existe
+          if [ ! -d "android" ]; then
+            echo "Dossier android non trouvé!"
+            exit 1
+          fi
           
-      - name: Android Setup
-        script: |
-          # Vérifier si on est dans le bon dossier
-          pwd
+          # Afficher la structure du projet
+          echo "Structure du projet:"
           ls -la
+          echo "Contenu du dossier android:"
+          ls -la android/
           
-          # Aller dans le dossier android
+      - name: Set up local properties
+        script: |
+          cd android
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "local.properties"
+          cd ..
+          
+      - name: Verify Gradle files
+        script: |
           cd android
           
-          # Créer local.properties
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > "local.properties"
-          
-          # Vérifier les fichiers Gradle
-          ls -la
-          
-          # Si gradlew n'existe pas, le générer
+          # Vérifier si gradlew existe
           if [ ! -f "gradlew" ]; then
-            gradle wrapper
+            echo "gradlew non trouvé, tentative de génération..."
+            flutter create --platforms=android .
+            
+            # Vérifier à nouveau
+            if [ ! -f "gradlew" ]; then
+              echo "Échec de la création de gradlew"
+              exit 1
+            fi
           fi
           
           # Rendre gradlew exécutable
           chmod +x gradlew
           
-          # Vérifier la version de Gradle
+          # Afficher la version de Gradle
           ./gradlew --version
+          cd ..
           
-      - name: Update build.gradle
+      - name: Build Android release
         script: |
           cd android
-          
-          # Mettre à jour le build.gradle si nécessaire
-          if [ -f "build.gradle" ]; then
-            echo "Updating build.gradle..."
-            sed -i '' 's/compileSdkVersion .*/compileSdkVersion 33/g' app/build.gradle
-            sed -i '' 's/targetSdkVersion .*/targetSdkVersion 33/g' app/build.gradle
-            sed -i '' 's/minSdkVersion .*/minSdkVersion 21/g' app/build.gradle
-          fi
-          
-      - name: Build Android Release
-        script: |
-          cd android
-          # Clean build
           ./gradlew clean
-          
-          # Build avec logs détaillés
-          ./gradlew assembleRelease --debug
+          ./gradlew assembleRelease
           
     artifacts:
       - android/app/build/outputs/apk/release/**/*.apk
       - android/app/build/outputs/mapping/release/mapping.txt
-      
     publishing:
       email:
         recipients:
           - diopsamba408@gmail.com
-        notify:
-          success: true
-          failure: true
