@@ -10,23 +10,16 @@ workflows:
       java: 17
     scripts:
       - name: Set up Java and Flutter
-        script: |
-          java -version
-          flutter doctor -v
-          
+        script: flutter doctor -v
       - name: Flutter build preparation
         script: |
           flutter clean
           flutter pub get
-          
           if [ ! -d "android" ]; then
             flutter create --platforms=android .
           fi
-          
       - name: Set up local properties
-        script: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > "android/local.properties"
-          
+        script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "android/local.properties"
       - name: Update Gradle configuration
         script: |
           cd android
@@ -37,7 +30,6 @@ workflows:
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-all.zip" > gradle/wrapper/gradle-wrapper.properties
           ./gradlew --version
           cd ..
-          
       - name: Fix Stockfish AndroidManifest
         script: |
           STOCKFISH_MANIFEST="/Users/builder/.pub-cache/hosted/pub.dev/stockfish-1.5.0/android/src/main/AndroidManifest.xml"
@@ -45,33 +37,101 @@ workflows:
             cp "$STOCKFISH_MANIFEST" "${STOCKFISH_MANIFEST}.backup"
             sed -i '' 's/package="com.stockfish"//g' "$STOCKFISH_MANIFEST"
           fi
-
       - name: Update Android build configuration
         script: |
-          GRADLE_FILE="android/app/build.gradle"
-          if [ -f "$GRADLE_FILE" ]; then
-            cp "$GRADLE_FILE" "${GRADLE_FILE}.backup"
-            sed -i '' 's/compileSdkVersion.*/compileSdkVersion 33/g' "$GRADLE_FILE"
-            sed -i '' 's/targetSdkVersion.*/targetSdkVersion 33/g' "$GRADLE_FILE"
-            echo "namespace 'com.example.chess_front'" >> "$GRADLE_FILE"
-          fi
-          
-          # Mettre à jour aussi le build.gradle de Stockfish
+          echo 'plugins {
+              id "com.android.application"
+              id "kotlin-android"
+              id "dev.flutter.flutter-gradle-plugin"
+          }
+
+          def localProperties = new Properties()
+          def localPropertiesFile = rootProject.file("local.properties")
+          if (localPropertiesFile.exists()) {
+              localPropertiesFile.withReader("UTF-8") { reader ->
+                  localProperties.load(reader)
+              }
+          }
+
+          android {
+              namespace "com.example.chess"
+              compileSdkVersion 33
+              ndkVersion flutter.ndkVersion
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_1_8
+                  targetCompatibility JavaVersion.VERSION_1_8
+              }
+
+              kotlinOptions {
+                  jvmTarget = "1.8"
+              }
+
+              sourceSets {
+                  main.java.srcDirs += "src/main/kotlin"
+              }
+
+              defaultConfig {
+                  applicationId "com.example.chess"
+                  minSdkVersion 21
+                  targetSdkVersion 33
+                  versionCode 1
+                  versionName "1.0"
+              }
+
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.debug
+                  }
+              }
+          }
+
+          flutter {
+              source "../.."
+          }' > "android/app/build.gradle"
+
           STOCKFISH_GRADLE="/Users/builder/.pub-cache/hosted/pub.dev/stockfish-1.5.0/android/build.gradle"
           if [ -f "$STOCKFISH_GRADLE" ]; then
-            cp "$STOCKFISH_GRADLE" "${STOCKFISH_GRADLE}.backup"
-            sed -i '' 's/compileSdkVersion.*/compileSdkVersion 33/g' "$STOCKFISH_GRADLE"
-            sed -i '' 's/targetSdkVersion.*/targetSdkVersion 33/g' "$STOCKFISH_GRADLE"
+            echo 'group "com.stockfish"
+            version "1.0"
+
+            buildscript {
+                ext.kotlin_version = "1.7.10"
+                repositories {
+                    google()
+                    mavenCentral()
+                }
+
+                dependencies {
+                    classpath "com.android.tools.build:gradle:7.3.0"
+                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+                }
+            }
+
+            rootProject.allprojects {
+                repositories {
+                    google()
+                    mavenCentral()
+                }
+            }
+
+            apply plugin: "com.android.library"
+            apply plugin: "kotlin-android"
+
+            android {
+                compileSdkVersion 33
+
+                defaultConfig {
+                    minSdkVersion 21
+                    targetSdkVersion 33
+                }
+            }' > "$STOCKFISH_GRADLE"
           fi
-          
       - name: Build Android release
-        script: |
-          flutter build apk --release
-          
+        script: flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
       - build/app/outputs/mapping/release/mapping.txt
-      
     publishing:
       email:
         recipients:
