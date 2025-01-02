@@ -34,12 +34,17 @@ workflows:
             gradle wrapper
           fi
           chmod +x gradlew
-          
-          # Ajout de la mise à jour de la version Gradle
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-all.zip" > gradle/wrapper/gradle-wrapper.properties
-          
           ./gradlew --version
           cd ..
+          
+      - name: Fix Stockfish AndroidManifest
+        script: |
+          STOCKFISH_MANIFEST="/Users/builder/.pub-cache/hosted/pub.dev/stockfish-1.5.0/android/src/main/AndroidManifest.xml"
+          if [ -f "$STOCKFISH_MANIFEST" ]; then
+            cp "$STOCKFISH_MANIFEST" "${STOCKFISH_MANIFEST}.backup"
+            sed -i '' 's/package="com.stockfish"//g' "$STOCKFISH_MANIFEST"
+          fi
           
       - name: Build Android release
         script: |
