@@ -7,7 +7,7 @@ workflows:
       groups:
         - google_play
       flutter: stable
-      java: 17.0.0 # Spécification explicite de la version de Java
+      java: 17 # Correction de la version de Java
     scripts:
       - name: Set up Java and Flutter
         script: |
