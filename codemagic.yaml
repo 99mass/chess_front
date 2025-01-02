@@ -31,7 +31,3 @@ workflows:
       email:
         recipients:
           - diopsamba408@gmail.com
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        submit_as_draft: true
