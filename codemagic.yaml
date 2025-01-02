@@ -27,34 +27,35 @@ workflows:
           if [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
             echo "Gradle files not found. Creating basic Android project structure..."
             # Créer le fichier settings.gradle
-            echo "rootProject.name = 'chess_front'" > settings.gradle
+            echo 'rootProject.name = "chess_front"' > settings.gradle
             
-            # Créer le fichier build.gradle
-            cat > build.gradle << EOL
-android {
-    compileSdkVersion 33
-    
-    defaultConfig {
-        applicationId "com.example.chess_front"
-        minSdkVersion 21
-        targetSdkVersion 33
-        versionCode 1
-        versionName "1.0"
-    }
-    
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-}
+            # Créer le fichier build.gradle en utilisant la syntaxe YAML correcte
+            echo 'plugins {
+                id "com.android.application"
+            }
 
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    // Autres dépendances si nécessaires
-}
-EOL
+            android {
+                compileSdkVersion 33
+                
+                defaultConfig {
+                    applicationId "com.example.chess_front"
+                    minSdkVersion 21
+                    targetSdkVersion 33
+                    versionCode 1
+                    versionName "1.0"
+                }
+                
+                buildTypes {
+                    release {
+                        minifyEnabled false
+                        proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+                    }
+                }
+            }
+
+            dependencies {
+                implementation "androidx.appcompat:appcompat:1.6.1"
+            }' > build.gradle
           fi
           
       - name: Set up local properties
