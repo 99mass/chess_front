@@ -55,7 +55,7 @@ workflows:
 
           android {
               namespace "com.example.chess"
-              compileSdkVersion 33
+              compileSdkVersion 34
               ndkVersion flutter.ndkVersion
 
               compileOptions {
@@ -74,7 +74,7 @@ workflows:
               defaultConfig {
                   applicationId "com.example.chess"
                   minSdkVersion 21
-                  targetSdkVersion 33
+                  targetSdkVersion 34
                   versionCode 1
                   versionName "1.0"
               }
@@ -119,11 +119,12 @@ workflows:
             apply plugin: "kotlin-android"
 
             android {
-                compileSdkVersion 33
+                namespace "com.stockfish"
+                compileSdkVersion 34
 
                 defaultConfig {
                     minSdkVersion 21
-                    targetSdkVersion 33
+                    targetSdkVersion 34
                 }
             }' > "$STOCKFISH_GRADLE"
           fi
