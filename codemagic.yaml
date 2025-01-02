@@ -7,7 +7,7 @@ workflows:
       groups:
         - google_play
       flutter: stable
-      java: 17 # Correction de la version de Java
+      java: 17
     scripts:
       - name: Set up Java and Flutter
         script: |
@@ -19,7 +19,6 @@ workflows:
           flutter clean
           flutter pub get
           
-          # Recréer le projet Android si nécessaire
           if [ ! -d "android" ]; then
             flutter create --platforms=android .
           fi
@@ -31,13 +30,14 @@ workflows:
       - name: Update Gradle configuration
         script: |
           cd android
-          # S'assurer que gradlew existe et est exécutable
           if [ ! -f "gradlew" ]; then
             gradle wrapper
           fi
           chmod +x gradlew
           
-          # Afficher les versions pour le débogage
+          # Ajout de la mise à jour de la version Gradle
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-all.zip" > gradle/wrapper/gradle-wrapper.properties
+          
           ./gradlew --version
           cd ..
           
