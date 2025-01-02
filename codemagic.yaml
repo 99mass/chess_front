@@ -6,31 +6,58 @@ workflows:
     environment:
       groups:
         - google_play
+      flutter: stable
     scripts:
-      - name: Set up project
+      - name: Flutter build preparation
         script: |
-          # Vérifier si nous sommes dans le bon répertoire
-          echo "Current directory:"
-          pwd
-          ls -la
+          # Installer les dépendances Flutter
+          flutter pub get
           
-          # S'assurer d'être dans le dossier android
-          cd android
+          # Vérifier que le dossier android existe
+          if [ ! -d "android" ]; then
+            echo "Dossier android non trouvé!"
+            exit 1
+          fi
           
-          # Vérifier le contenu du dossier android
-          echo "Android directory content:"
+          # Afficher la structure du projet
+          echo "Structure du projet:"
           ls -la
+          echo "Contenu du dossier android:"
+          ls -la android/
           
       - name: Set up local properties
         script: |
           cd android
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "local.properties"
+          cd ..
+          
+      - name: Verify Gradle files
+        script: |
+          cd android
+          
+          # Vérifier si gradlew existe
+          if [ ! -f "gradlew" ]; then
+            echo "gradlew non trouvé, tentative de génération..."
+            flutter create --platforms=android .
+            
+            # Vérifier à nouveau
+            if [ ! -f "gradlew" ]; then
+              echo "Échec de la création de gradlew"
+              exit 1
+            fi
+          fi
+          
+          # Rendre gradlew exécutable
+          chmod +x gradlew
+          
+          # Afficher la version de Gradle
+          ./gradlew --version
+          cd ..
           
       - name: Build Android release
         script: |
           cd android
-          # Utiliser le gradlew existant
-          chmod +x ./gradlew
+          ./gradlew clean
           ./gradlew assembleRelease
           
     artifacts:
