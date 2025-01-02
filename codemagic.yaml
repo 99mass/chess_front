@@ -7,75 +7,35 @@ workflows:
       groups:
         - google_play
     scripts:
-      - name: Initialize project structure
+      - name: Set up project
         script: |
-          # Vérifier le contenu du répertoire
-          echo "Current directory content:"
-          ls -la
-          
-          # Si le projet est dans un sous-dossier, y aller
-          if [ -d "android" ]; then
-            cd android
-          fi
-          
-          # Vérifier à nouveau le contenu
-          echo "Directory after potential navigation:"
+          # Vérifier si nous sommes dans le bon répertoire
+          echo "Current directory:"
           pwd
           ls -la
           
-          # Vérifier si les fichiers Gradle existent
-          if [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
-            echo "Gradle files not found. Creating basic Android project structure..."
-            # Créer le fichier settings.gradle
-            echo 'rootProject.name = "chess_front"' > settings.gradle
-            
-            # Créer le fichier build.gradle en utilisant la syntaxe YAML correcte
-            echo 'plugins {
-                id "com.android.application"
-            }
-
-            android {
-                compileSdkVersion 33
-                
-                defaultConfig {
-                    applicationId "com.example.chess_front"
-                    minSdkVersion 21
-                    targetSdkVersion 33
-                    versionCode 1
-                    versionName "1.0"
-                }
-                
-                buildTypes {
-                    release {
-                        minifyEnabled false
-                        proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
-                    }
-                }
-            }
-
-            dependencies {
-                implementation "androidx.appcompat:appcompat:1.6.1"
-            }' > build.gradle
-          fi
+          # S'assurer d'être dans le dossier android
+          cd android
+          
+          # Vérifier le contenu du dossier android
+          echo "Android directory content:"
+          ls -la
           
       - name: Set up local properties
         script: |
+          cd android
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "local.properties"
-          
-      - name: Install Gradle Wrapper
-        script: |
-          if [ ! -f "gradlew" ]; then
-            gradle wrapper
-          fi
-          chmod +x ./gradlew
           
       - name: Build Android release
         script: |
+          cd android
+          # Utiliser le gradlew existant
+          chmod +x ./gradlew
           ./gradlew assembleRelease
           
     artifacts:
-      - app/build/outputs/apk/release/**/*.apk
-      - app/build/outputs/mapping/release/mapping.txt
+      - android/app/build/outputs/apk/release/**/*.apk
+      - android/app/build/outputs/mapping/release/mapping.txt
     publishing:
       email:
         recipients:
